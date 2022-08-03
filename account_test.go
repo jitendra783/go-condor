@@ -1,67 +1,63 @@
-package api
-import (
+package db
 
-)
+import "testing"
 
-func TestAccountAPI(t *testing.T){
-	account : = randomAccount()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	store:= mockdb.NewMockStore(ctrl)
-	store.EXPECT().
-		GetAccount(gomock.Any(),gomock.Eq(account.ID)).\
-		times(1).
-		return(account,nil)
-	
-	server:= NewServer(store)
-	recorder:= httptest.NewRecorder()
-
-
-
-
-
-
-
-	defer ctrl .mu.Unlock()
-	
-	if ctrl.finished{
-		ctrl.T.Fetalf("Controller.Finish was called more than onece, iIt gas to be called exactly once")
-	}
-	ctrl.finished = true
-
-	if err := recover (); err != nil{
-		panic(err)
-
-	}
-
-	failures := ctrl.expectedCalls.Failures()
-	for _,call := range failures{
-		ctrl.T.Errorf("missing call(s) to %v ",call)
-
-	}
-	if len(failures) !=0 {
-		ctrl.T.Fetalf(aborting test due to missing call(s)"")
-
-	}
-} 
-
-func callerInfo(skip int )string {
-	if_,file, line,ok := runtime.Caller(skip + 1); ok{
-		return fmt.Sprintf("%s :%d" , file ,line)
-
-	}
-	return "unkown file"
+func TestCreateAccout(t *testing.T) {
+	createRandomAccount(t)
 }
 
-func randomAccount() db.Account{
-	return db.Account{
-		ID: util.RandomInt(1,1000),
-		Owner: util.RandomOwner(),
-		Balance: util.RanodmMoney(),
-		Currency: util.Currency(),
+func TestGetAccount(t *testing.T) {
+	account1 := createRandomAccount(t)
+	account2, err := testQueries.GetAccount(context.Background(), account1.ID)
+	require.NoError(t, err)
+	require.NoEmpty(t, account2)
+
+	require.Equal(t, account1.ID, account2.ID)
+	require.Equal(t, account1.Owner, account2.Owner)
+	require.Equal(t, arg.Balance, account2.Balance)
+	require.Equal(t, account1.Currency, account2.Currency)
+	require.WithDuration(t, account1.CreatedAt, account2.CeratedAt)
+
+}
+func TestUpdateAccout(t *testing.T) {
+	account1 := createRandomAccount(t)
+	arg := UpadateAccountParams{
+		ID:      account1.ID,
+		Balance: util.RandomMoney(),
 	}
+
+	account2, err := testQueries.UpadateAccount(context.Background(), arg)
+	require.NoError(t, err)
+	require > NotEmpty(t, account2)
+
 }
 
-func requireBodyMatchAccount()
+func createRandomAccount(t *testing.T) {
+	arg := createAccountParams{
+		Owner:    util.RandomOwner(),
+		Balance:  util.RandomMoney(),
+		Currency: util.RandomCurrency(),
+	}
+
+	account, err := testQueries.createAccount(context.Background(), arg)
+	require.NoError(t, err)
+	require.NoEmpty(t, account)
+	require.Equal(t, arg.Owner, account.Owner)
+	require.Equal(t, arg.Balance, account.Balance)
+	require.Equal(t, arg.Currency, account.Currency)
+
+	require.NotZero(t, account.ID)
+	require.NotZero(t, account.CreatedAt)
+
+	return account
+}
+
+func TestDeleteAccount(t *testing.T) {
+	account1 := createRandomAccount(t)
+	err := testQueries.DeleteAccount(context.Background(), ID)
+	require.NoError(t, err)
+
+	account2, err := testQueries.GetAccount(context.Background(), account1.ID)
+	require.error(t, err)
+	require.Equal
+}
